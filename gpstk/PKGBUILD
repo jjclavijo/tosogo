@@ -1,0 +1,72 @@
+# Maintainer: Tobias Markus < tobias AT miglix DOT eu >
+# Contributor: Samuel Mesa <samuelmesa@linuxmail.org>
+
+pkgname=gpstk
+pkgver=3.0.0
+pkgrel=1
+pkgdesc="Algorithms and frameworks supporting the development of processing and analysis applications in navigation and global positioning"
+url="http://www.gpstk.org"
+license=('LGPL')
+depends=()
+makedepends=('cmake' 'swig')
+provides=('gpstk')
+conflicts=('gpstk')
+arch=('x86_64')
+source=("https://gitlab.com/sgl-ut/GPSTk/-/archive/v${pkgver}/GPSTk-v${pkgver}.tar.gz")
+sha256sums=('3dd1b86fd918984ca373ec7bb97f9a07a3a67ae57e98539fd0cfd46dbe05542a')
+
+prepare() {
+  echo Source Dir "${srcdir}"
+  echo Current dir "$(realpath .)"
+
+  export pksrcdir="${srcdir}/GPSTk-v${pkgver}"
+
+  echo Source Pkg Dir "${pksrcdir}"
+
+  echo Looking for python install
+  export python_exe="$(which python)"
+  if [ -f ${python_exe} ]
+  then 
+    export python_install="$(${python_exe} -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')" 
+    export install_python="ON"
+  else
+    export install_python="OFF"
+  fi
+
+  export CPU_COUNT=$(grep -c processor /proc/cpuinfo)
+  
+  echo Will build with ${CPU_COUNT} threads
+}
+
+build() {
+    cd "${srcdir}"
+
+    echo Minor patch
+    patch "${pksrcdir}/swig/PythonSetup.cmake" ../swig_pysetup.patch
+    patch "${pksrcdir}/swig/CMakeLists.txt" ../swig_cflags.patch
+    echo End patch
+
+    export CFLAGS+=" ${CPPFLAGS}"
+    export CXXFLAGS+=" ${CPPFLAGS} -Wno-deprecated -Wno-return-type"
+    cmake -B build \
+        -S "GPSTk-v${pkgver}" \
+        -Wno-dev \
+        -DCMAKE_CXX_FLAGS="-Wno-deprecated" \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DCMAKE_BUILD_TYPE=None \
+        -DUSE_RPATH=OFF \
+        -DBUILD_EXT=ON \
+        -DBUILD_PYTHON=${install_python} \
+        -DPYTHON_EXECUTABLE=${python_exe} \
+        -DPYTHON_INSTALL_PREFIX=${python_install}
+
+    make -j ${CPU_COUNT} -C build all 
+
+    tar czf ../gpstk_py_binds.tar.gz -C "${srcdir}/build/swig/module" .
+}
+
+package() {
+    cd "${srcdir}"
+
+    make -j ${CPU_COUNT} -C build DESTDIR="${pkgdir}" install
+}

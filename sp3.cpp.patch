@@ -1,0 +1,5 @@
+195c195,196
+<         else       cerr << ltmp;
+---
+>         else       cerr << "warning: not equal number of satellites " << _nrecord <<  " " << _nrecmax << "!";
+>         //else       cerr << ltmp;
