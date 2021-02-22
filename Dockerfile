@@ -8,8 +8,7 @@ RUN patched_glibc=glibc-linux4-2.33-4-x86_64.pkg.tar.zst && \
     bsdtar -C / -xvf "$patched_glibc"
 
 # Install Dependencies and updates
-RUN pacman -Syu --noconfirm boost-libs python;\
-    pacman -Syu --noconfirm base-devel git boost;\
+RUN pacman -Syu --noconfirm boost-libs python base-devel git boost;\
     pacman -Scc --noconfirm 
 
 # Get RTKLIB pkgfile from AUR
@@ -28,7 +27,7 @@ RUN useradd builder -d /builder;\
 RUN cd builder/rtklib/rtklib-git;\
     ls ;\
     source ./PKGBUILD;\
-    pacman -Syu --noconfirm ${makedepends[@]} ${depends[@]}
+    pacman -S --noconfirm ${makedepends[@]} ${depends[@]}
 
 RUN cd builder/rtklib/rtklib-git;\
     su builder -c "makepkg -s"
@@ -41,7 +40,7 @@ RUN chown -R builder:builder /builder/gpstk
 RUN cd builder/gpstk;\
     ls ;\
     source ./PKGBUILD;\
-    pacman -Syu --noconfirm ${makedepends[@]} ${depends[@]}
+    pacman -S --noconfirm ${makedepends[@]} ${depends[@]}
 
 RUN cd builder/gpstk;\
     su builder -c "makepkg -s"
@@ -92,12 +91,12 @@ RUN mkdir builder/pdftk;\
     chown -R builder:builder /builder;\
     cd libgcj17-bin;\
     source ./PKGBUILD;\
-    pacman -Syu --noconfirm ${depends[@]};\
+    pacman -S --noconfirm ${depends[@]};\
     su builder -c "makepkg -s";\
     pacman -U --noconfirm libgcj17*.pkg.*;\
     cd ../pdftk-bin;\
     source ./PKGBUILD;\
-    pacman -Syu --noconfirm ${depends[@]};\
+    pacman -S --noconfirm ${depends[@]};\
     su builder -c "makepkg -s"
 
 ##########################################
@@ -121,12 +120,6 @@ RUN cd gLAB/;\
 
 FROM archlinux:latest 
 
-# WORKAROUND for glibc 2.33 and old Docker
-# See https://github.com/actions/virtual-environments/issues/2658
-# Thanks to https://github.com/lxqt/lxqt-panel/pull/1562
-RUN patched_glibc=glibc-linux4-2.33-4-x86_64.pkg.tar.zst && \
-    curl -LO "https://repo.archlinuxcn.org/x86_64/$patched_glibc" && \
-    bsdtar -C / -xvf "$patched_glibc"
 
 # Install gosu
 COPY docker/install_scripts/* ./
@@ -134,9 +127,15 @@ RUN ./install_gosu.sh
 
 ENV PROY_HOME=/proyecto
 
+# WORKAROUND for glibc 2.33 and old Docker
+# See https://github.com/actions/virtual-environments/issues/2658
+# Thanks to https://github.com/lxqt/lxqt-panel/pull/1562
+RUN patched_glibc=glibc-linux4-2.33-4-x86_64.pkg.tar.zst && \
+    curl -LO "https://repo.archlinuxcn.org/x86_64/$patched_glibc" && \
+    bsdtar -C / -xvf "$patched_glibc"
+
 # Install dependencies
-RUN pacman -Syu --noconfirm boost-libs python;\
-    pacman -Syu --noconfirm npm;\
+RUN pacman -Syu --noconfirm boost-libs python npm proj poppler;\
     pacman -Scc --noconfirm
 
 COPY --from=0 /builder/rtklib/rtklib-git/*.pkg.* .
@@ -179,10 +178,6 @@ RUN SPATH=$(python3 -c 'import sysconfig; print(sysconfig.get_paths()["purelib"]
     ln -s /rtklib/confs/pyconf "$SPATH/pyconf"
 
 # Install Extra tools
-
-RUN pacman -Syu --noconfirm proj poppler;\
-    pacman -Scc --noconfirm
-
 COPY --from=0 /builder/pdftk/pdftk-bin/*.pkg.* .
 COPY --from=0 /builder/pdftk/libgcj17-bin/*.pkg.* .
 
