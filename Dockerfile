@@ -1,4 +1,4 @@
-FROM docker.io/debian:bullseye-slim
+FROM docker.io/debian:bullseye-slim AS builder
 
 
 # Install Dependencies and updates
@@ -58,7 +58,6 @@ RUN cd /recipes/anubis;\
 
 USER root
 
-
 #https://www.pecny.cz/sw/geb/
 ADD recipes/geb-pp-0.9.0.tgz /recipes/
 
@@ -67,7 +66,7 @@ COPY recipes/sp3.cpp.patch /recipes/geb-pp/sp3.cpp.patch
 
 RUN chown -R builder:builder /recipes/geb-pp
 
-RUN apt-get -y update ; apt-get -y install libboost-thread-dev libboost-filesystem-dev libboost-system-dev
+RUN apt-get -y update ; apt-get -y install libboost-all-dev
 
 USER builder
 
@@ -77,15 +76,36 @@ RUN cd /recipes/geb-pp;\
     sed -i 's/^make /make -j '$(grep -c processor /proc/cpuinfo)' /' autogen.sh;\
     ./autogen.sh
 
-USER root
+#USER root
+
+FROM docker.io/ubuntu:bionic AS glab
+
+# Install Dependencies and updates
+RUN apt update && apt -y --no-install-recommends install build-essential curl
+RUN apt-get install -y --reinstall ca-certificates
 
 COPY recipes/gLAB recipes/gLAB
-RUN chown -R builder:builder /recipes/gLAB
+
+RUN useradd builder -d /recipes;\
+    chown -R builder:builder /recipes/gLAB
 
 USER builder
 
 RUN cd /recipes/gLAB/;\
     ./build.sh
+
+FROM docker.io/debian:bullseye-slim 
+
+RUN mkdir recipes
+
+RUN useradd builder -d /recipes
+
+COPY --from=builder /recipes/* /recipes
+COPY --from=glab /recipes/* /recipes
+
+RUN chown -R builder:builder /recipes
+
+USER builder
 
 CMD [ "find" ,"/recipes" ]
 
