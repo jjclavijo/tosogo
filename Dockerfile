@@ -1,6 +1,5 @@
 FROM docker.io/debian:bullseye-slim AS builder
 
-
 # Install Dependencies and updates
 
 RUN apt-get -y update ; apt-get -y install gfortran gcc make git
@@ -43,56 +42,54 @@ USER root
 
 # Copy anubis and gebPP dources
 # https://gnutsoftware.com/software/anubis
-ADD recipes/anubis-2.3-lin-source-codes.tar.gz /recipes
+COPY recipes/anubis /recipes/anubis
 
 RUN chown -R builder:builder /recipes/anubis
 
+# Install dependencies for build
 RUN apt-get -y update ; apt-get -y install automake
 
 USER builder
 
-# Compile anubis
 RUN cd /recipes/anubis;\
-    sed -i 's/^make /make -j '$(grep -c processor /proc/cpuinfo)' /' autogen.sh;\
-    ./autogen.sh
+    ./makepkg.sh
 
 USER root
 
 #https://www.pecny.cz/sw/geb/
-ADD recipes/geb-pp-0.9.0.tgz /recipes/
-
-# Patch for compilation error
-COPY recipes/sp3.cpp.patch /recipes/geb-pp/sp3.cpp.patch
+COPY recipes/geb-pp /recipes/geb-pp
 
 RUN chown -R builder:builder /recipes/geb-pp
 
-RUN apt-get -y update ; apt-get -y install libboost-all-dev
+# Install dependencies for build
+RUN apt-get -y update ; apt-get -y install libboost-thread-dev libboost-system-dev libboost-filesystem-dev
 
 USER builder
 
-# Compile gebPP
 RUN cd /recipes/geb-pp;\
-    patch src/gcoders/sp3.cpp sp3.cpp.patch;\
-    sed -i 's/^make /make -j '$(grep -c processor /proc/cpuinfo)' /' autogen.sh;\
-    ./autogen.sh
+    ./makepkg.sh
 
-#USER root
+USER root
 
-FROM docker.io/ubuntu:bionic AS glab
+#FROM docker.io/ubuntu:bionic AS glab
 
+# Avoid gLAB, site is down.
 # Install Dependencies and updates
-RUN apt update && apt -y --no-install-recommends install build-essential curl
-RUN apt-get install -y --reinstall ca-certificates
-
-COPY recipes/gLAB recipes/gLAB
-
-RUN useradd builder -d /recipes;\
-    chown -R builder:builder /recipes/gLAB
-
-USER builder
-
-RUN cd /recipes/gLAB/;\
-    ./build.sh
+#RUN apt update && apt -y --no-install-recommends install build-essential curl
+#RUN apt-get install -y --reinstall ca-certificates
+#
+#COPY recipes/gLAB recipes/gLAB
+#
+#RUN useradd builder -d /recipes;\
+#    chown -R builder:builder /recipes/gLAB
+#
+#USER builder
+#
+## Install dependencies for build
+#RUN cd /recipes/gLAB;\
+#    ./makepkg.sh
+#
+#USER root
 
 FROM docker.io/debian:bullseye-slim 
 
@@ -100,14 +97,13 @@ RUN mkdir recipes
 
 RUN useradd builder -d /recipes
 
-COPY --from=builder /recipes/* /recipes
-COPY --from=glab /recipes/* /recipes
+COPY --from=builder /recipes/rtklib/pkg/* /
+COPY --from=builder /recipes/gpstk/pkg/* /
+COPY --from=builder /recipes/geb-pp/pkg/* /
+COPY --from=builder /recipes/anubis/pkg/* /
+#COPY --from=glab /recipes/gLAB/pkg/* /
 
-RUN chown -R builder:builder /recipes
-
-USER builder
-
-CMD [ "find" ,"/recipes" ]
+CMD [ "/bin/bash" ]
 
 #### Get gpstk pkgfile modified from AUR to use version 3.0.0
 ###COPY /gpstk /builder/gpstk
