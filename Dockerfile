@@ -2,7 +2,7 @@ FROM docker.io/debian:bullseye-slim AS builder
 
 # Install Dependencies and updates
 
-RUN apt-get -y update ; apt-get -y install gfortran gcc make git
+RUN apt-get -y update ; apt-get -y install gfortran gcc make git rsync
 
 RUN mkdir /recipes
 
@@ -19,7 +19,9 @@ USER builder
 
 # Install dependencies for build
 RUN cd /recipes/rtklib;\
-    ./makepkg.sh
+    ./makepkg.sh;\
+    find .  -type f -exec rm -f {} +;\
+    rm -rf src
 
 USER root
 
@@ -36,7 +38,9 @@ USER builder
 
 # Install dependencies for build
 RUN cd /recipes/gpstk;\
-    ./makepkg.sh
+    ./makepkg.sh;\
+    find . ! -name 'gpstk_py_binds.tar.gz' -type f -exec rm -f {} +;\
+    rm -rf src
 
 USER root
 
@@ -52,7 +56,10 @@ RUN apt-get -y update ; apt-get -y install automake
 USER builder
 
 RUN cd /recipes/anubis;\
-    ./makepkg.sh
+    ./makepkg.sh;\
+    find . -type f -exec rm -f {} +;\
+    rm -rf src
+
 
 USER root
 
@@ -67,9 +74,29 @@ RUN apt-get -y update ; apt-get -y install libboost-thread-dev libboost-system-d
 USER builder
 
 RUN cd /recipes/geb-pp;\
-    ./makepkg.sh
+    ./makepkg.sh;\
+    find . -type f -exec rm -f {} +;\
+    rm -rf src
+
 
 USER root
+
+# Python virtual environment
+RUN apt-get update -y; apt-get install -y python3 python3-venv;\
+    cd opt;\
+    python3 -m venv venv ;\
+    . /opt/venv/bin/activate ;\
+    pip install --no-cache-dir --upgrade pip;\
+    pip install --no-cache-dir jupyterlab ipython pandas numpy matplotlib;\
+    . /opt/venv/bin/activate ;\
+    pip --no-cache-dir install ipywidgets jupyter_contrib_nbextensions ipympl;\
+    jupyter contrib nbextension install;\
+    jupyter nbextension enable --py widgetsnbextension;\
+    # Install gpstk python swig bindings built alongside package.\
+    cd /opt/; mkdir gpybinds; cd gpybinds;\
+    tar xzf /recipes/gpstk/gpstk_py_binds.tar.gz;\
+    python setup.py install
+
 
 #FROM docker.io/ubuntu:bionic AS glab
 
@@ -87,7 +114,9 @@ USER root
 #
 ## Install dependencies for build
 #RUN cd /recipes/gLAB;\
-#    ./makepkg.sh
+#    ./makepkg.sh;\
+#    find . -type f -exec rm -f {} +;\
+#    rm -rf src
 #
 #USER root
 
@@ -105,74 +134,58 @@ COPY --from=builder /recipes/anubis/pkg/* /
 
 CMD [ "/bin/bash" ]
 
-#### Get gpstk pkgfile modified from AUR to use version 3.0.0
-###COPY /gpstk /builder/gpstk
-#### Create unprivileged user for builds
-###RUN chown -R builder:builder /builder/gpstk
+ENV BOOST_VER=1.74.0
+
+RUN apt-get update -y; apt-get install -y libboost-system$BOOST_VER \
+                                          libboost-thread$BOOST_VER \
+                                          libboost-filesystem$BOOST_VER python3 npm \
+                                          proj-bin #pdftk-java;
+
+RUN apt-get install -y wget;\
+    _deb_pkgver=2.02-4+b2;\
+    source_x86_64=http://httpredir.debian.org/debian/pool/main/p/pdftk/pdftk_${_deb_pkgver}_amd64.deb;\
+    wget $source_x86_64;\
+    apt-get install ./pdftk_${_deb_pkgver}_amd64.deb
+
+# Prepare Virtual Environment
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+RUN jupyter labextension install @jupyter-widgets/jupyterlab-manager@2.0;\
+    jupyter labextension install jupyter-matplotlib;\
+    jupyter labextension update --all;\
+    jupyter lab build
+
+RUN mkdir rtklib
+
+COPY /data /rtklib/data
+COPY /confs /rtklib/confs
+
+# Install pyconf, rtklib configuration stripts, as a module on env path
+RUN SPATH=$(python3 -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])') ;\
+    echo $SPATH;\
+    ln -s /rtklib/confs/pyconf "$SPATH/pyconf"
+
+
+#### Install gosu
+###COPY docker/install_scripts/* ./
+###RUN ./install_gosu.sh
 ###
-###RUN cd builder/gpstk;\
-###    ls ;\
-###    source ./PKGBUILD;\
-###    pacman -S --noconfirm ${makedepends[@]} ${depends[@]}
-###
-###RUN cd builder/gpstk;\
-###    su builder -c "makepkg -s"
-###
-###
-#### Python virtual environment
-###RUN cd opt;\
-###    python3 -m venv venv ;\
-###    . /opt/venv/bin/activate ;\
-###    pip install --no-cache-dir --upgrade pip;\
-###    pip install --no-cache-dir jupyterlab ipython pandas numpy matplotlib
-###
-#### Enable jupyter extension iýwidgets for interactiveness
-###RUN . /opt/venv/bin/activate ;\
-###    pip --no-cache-dir install ipywidgets jupyter_contrib_nbextensions ipympl;\
-###    jupyter contrib nbextension install;\
-###    jupyter nbextension enable --py widgetsnbextension
-###
-#### Install gpstk python swig bindings built alongside package.
-###RUN . /opt/venv/bin/activate ;\
-###    cd /opt/; mkdir gpybinds; cd gpybinds;\
-###    tar xzf /builder/gpstk/gpstk_py_binds.tar.gz;\
-###    python setup.py install
-###
-#### Get pdftk pkgfile from AUR
-###RUN mkdir builder/pdftk;\
-###    cd builder/pdftk/;\
-###    git clone https://aur.archlinux.org/pdftk-bin.git;\
-###    git clone https://aur.archlinux.org/libgcj17-bin.git;\
-###    chown -R builder:builder /builder;\
-###    cd libgcj17-bin;\
-###    source ./PKGBUILD;\
-###    pacman -S --noconfirm ${depends[@]};\
-###    su builder -c "makepkg -s";\
-###    pacman -U --noconfirm libgcj17*.pkg.*;\
-###    cd ../pdftk-bin;\
-###    source ./PKGBUILD;\
-###    pacman -S --noconfirm ${depends[@]};\
-###    su builder -c "makepkg -s"
-###
-#############################################
-####   End General Build First Stage        #
-#############################################
-###
-#################################
-#### gLAB only Builds on UBUNTU #
-#################################
-###
-###FROM ubuntu:latest
-###
-#### Install Dependencies and updates
-###RUN apt update && apt -y --no-install-recommends install build-essential curl
-###RUN apt-get install -y --reinstall ca-certificates
-###
-###COPY gLAB/ gLAB/
-###
-###RUN cd gLAB/;\
-###    ./build.sh
-###
+###ENV PROY_HOME=/proyecto
+# Entrypoint Prepares working directory and unprivileged userfor jupyter
+#COPY docker/gosu_entry.sh /usr/local/bin/gosu_entry.sh
+#RUN chmod +x /usr/local/bin/gosu_entry.sh
+
+ENV PROY_HOME=/proyecto
+COPY notebooks /notebooks
+
+VOLUME /notebooks
+VOLUME /proyecto
+
+#ENTRYPOINT ["/usr/local/bin/gosu_entry.sh"]
+
+CMD ["jupyter-lab", "--ip=0.0.0.0", "--port=8889", "--no-browser", "--notebook-dir=/notebooks"]
+
+
 ###FROM archlinux:latest 
 ###
 ###
