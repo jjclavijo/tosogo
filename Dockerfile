@@ -97,6 +97,12 @@ RUN apt-get update -y; apt-get install -y python3 python3-venv;\
     tar xzf /recipes/gpstk/gpstk_py_binds.tar.gz;\
     python setup.py install
 
+RUN mkdir recipes/pdftk;\
+    cd recipes/pdftk;\
+    curl -O -J "https://gitlab.com/pdftk-java/pdftk/-/jobs/924565150/artifacts/raw/build/native-image/pdftk";\
+    mkdir -p pkg/usr/bin;\
+    install -m755 ./pdftk ./pkg/usr/bin;
+
 
 #FROM docker.io/ubuntu:bionic AS glab
 
@@ -122,17 +128,14 @@ RUN apt-get update -y; apt-get install -y python3 python3-venv;\
 
 FROM docker.io/debian:bullseye-slim 
 
-RUN mkdir recipes
-
-RUN useradd builder -d /recipes
-
 COPY --from=builder /recipes/rtklib/pkg/* /
 COPY --from=builder /recipes/gpstk/pkg/* /
 COPY --from=builder /recipes/geb-pp/pkg/* /
 COPY --from=builder /recipes/anubis/pkg/* /
+COPY --from=builder /recipes/pdftk/pkg/* /
 #COPY --from=glab /recipes/gLAB/pkg/* /
 
-CMD [ "/bin/bash" ]
+#CMD [ "/bin/bash" ]
 
 ENV BOOST_VER=1.74.0
 
@@ -140,12 +143,6 @@ RUN apt-get update -y; apt-get install -y libboost-system$BOOST_VER \
                                           libboost-thread$BOOST_VER \
                                           libboost-filesystem$BOOST_VER python3 npm \
                                           proj-bin #pdftk-java;
-
-RUN apt-get install -y wget;\
-    _deb_pkgver=2.02-4+b2;\
-    source_x86_64=http://httpredir.debian.org/debian/pool/main/p/pdftk/pdftk_${_deb_pkgver}_amd64.deb;\
-    wget $source_x86_64;\
-    apt-get install ./pdftk_${_deb_pkgver}_amd64.deb
 
 # Prepare Virtual Environment
 COPY --from=builder /opt/venv /opt/venv
@@ -183,7 +180,7 @@ VOLUME /proyecto
 
 #ENTRYPOINT ["/usr/local/bin/gosu_entry.sh"]
 
-CMD ["jupyter-lab", "--ip=0.0.0.0", "--port=8889", "--no-browser", "--notebook-dir=/notebooks"]
+CMD ["jupyter-lab", "--allow-root","--ip=0.0.0.0", "--port=8889", "--no-browser", "--notebook-dir=/notebooks"]
 
 
 ###FROM archlinux:latest 
