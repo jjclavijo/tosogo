@@ -1,0 +1,46 @@
+35c35
+<     set( CMAKE_CXX_FLAGS "-std=c++11" )
+---
+>     set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11" )
+39c39
+<     set( CMAKE_CXX_FLAGS "-std=c++11" )
+---
+>     set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11" )
+41c41
+<     set( CMAKE_CXX_FLAGS "-std=c++11" )
+---
+>     set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11" )
+135,150c135,150
+< if( BUILD_FOR_PACKAGE_SWITCH )
+<     # If building for a package, use the "root" switch to imitate the system package path
+<     install( CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} ${SETUP_PY} install --root=${PYTHON_INSTALL_PREFIX} WORKING_DIRECTORY ${MODULE_PATH})" )
+< elseif( PYTHON_USER_INSTALL )
+<     # If performing a user-install, use the `--user` flag, otherwise it may not create the correct directores.
+<     install( CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} ${SETUP_PY} install --user WORKING_DIRECTORY ${MODULE_PATH})" )
+< else()
+<     install( CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} ${SETUP_PY} install --prefix=${PYTHON_INSTALL_PREFIX} WORKING_DIRECTORY ${MODULE_PATH})" )
+< endif()
+< 
+< if( PIP_WHEEL_SWITCH )
+<     add_custom_target(swig-make-wheel ALL
+<             COMMAND ${PYTHON_EXECUTABLE} ${SETUP_PY} bdist_wheel
+<             WORKING_DIRECTORY ${MODULE_PATH}
+<             DEPENDS "_${SWIG_MODULE}")
+< endif()
+---
+> #if( BUILD_FOR_PACKAGE_SWITCH )
+> #    # If building for a package, use the "root" switch to imitate the system package path
+> #    install( CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} ${SETUP_PY} install --root=${PYTHON_INSTALL_PREFIX} WORKING_DIRECTORY ${MODULE_PATH})" )
+> #elseif( PYTHON_USER_INSTALL )
+> #    # If performing a user-install, use the `--user` flag, otherwise it may not create the correct directores.
+> #    install( CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} ${SETUP_PY} install --user WORKING_DIRECTORY ${MODULE_PATH})" )
+> #else()
+> #    install( CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} ${SETUP_PY} install --prefix=${PYTHON_INSTALL_PREFIX} WORKING_DIRECTORY ${MODULE_PATH})" )
+> #endif()
+> #
+> #if( PIP_WHEEL_SWITCH )
+> #    add_custom_target(swig-make-wheel ALL
+> #            COMMAND ${PYTHON_EXECUTABLE} ${SETUP_PY} bdist_wheel
+> #            WORKING_DIRECTORY ${MODULE_PATH}
+> #            DEPENDS "_${SWIG_MODULE}")
+> #endif()

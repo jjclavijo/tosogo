@@ -1,0 +1,42 @@
+pkgname=geb-pp
+pkgver=0.9.0
+pkgrel=1
+pkgdesc=""
+arch=(x86_64)
+url=""
+license=()
+#depends=()
+source=($pkgname.tgz::file:///$srcdir/../$pkgname-$pkgver.tgz)
+noextract=($pkgname.tgz)
+sha256sums=('9e7d472c2ef69f1670da8b8ab1987e0b24ae5e134ed7d34e3cce713a9cebafc5')
+
+prepare(){
+  cd "$srcdir"
+  tar -xf $pkgname.tgz
+  patch $pkgname/src/gcoders/sp3.cpp ../sp3.cpp.patch
+}
+
+
+build() {
+  cd "$srcdir/$pkgname"
+  
+  # eventually run autoreconf when it will work better 
+  # autoreconf --force --install -I config 
+  
+  aclocal           
+  autoheader        
+  autoconf          
+  automake -a -c -f 
+  ./configure       
+
+  make -j $(grep -c processor /proc/cpuinfo)
+
+}
+
+package() {
+   echo packing
+   cd "$srcdir/$pkgname"
+
+   install -dm755 "$pkgdir"/usr/bin/
+   install -m755 app/gebPP "$pkgdir"/usr/bin/gebPP
+}

@@ -1,0 +1,42 @@
+pkgname=anubis
+pkgver=2.3
+pkgrel=1
+pkgdesc=""
+arch=(x86_64)
+url=""
+license=()
+#depends=()
+source=($pkgname.tgz::file:///$srcdir/../anubis-$pkgver-lin-source-codes.tar.gz)
+noextract=($pkgname.tgz)
+sha256sums=('b063a471fa8778781e5649e34949ede8f6b317f95a14dae4610bbd06b17704ee')
+
+build() {
+  cd "$srcdir"
+  tar -xf $pkgname.tgz
+  cd "$srcdir/$pkgname"
+
+  # install 'automake' package 
+  #
+  # eventually run autoreconf when it will work better 
+  # autoreconf --force --install -I config 
+  
+  # if necessary you may uncomment and update the following two environment variables: 
+  export CPPFLAGS="$CPPFLAGS -O3   " 
+  
+  aclocal           
+  autoheader        
+  autoconf          
+  automake -a -c -f 
+  ./configure
+  # ./configure LDFLAGS=-static
+  make -j $(grep -c processor /proc/cpuinfo)
+
+}
+
+package() {
+   echo packing
+   cd "$srcdir/$pkgname"
+
+   install -dm755 "$pkgdir"/usr/bin/
+   install -m755 app/anubis "$pkgdir"/usr/bin/anubis
+}
