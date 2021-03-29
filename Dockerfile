@@ -20,7 +20,7 @@ USER builder
 # Install dependencies for build
 RUN cd /recipes/rtklib;\
     ./makepkg.sh;\
-    find .  -type f -exec rm -f {} +;\
+    find . -maxdepth 1 -type f -exec rm -f {} +;\
     rm -rf src
 
 USER root
@@ -39,7 +39,7 @@ USER builder
 # Install dependencies for build
 RUN cd /recipes/gpstk;\
     ./makepkg.sh;\
-    find . ! -name 'gpstk_py_binds.tar.gz' -type f -exec rm -f {} +;\
+    find . ! -maxdepth 1 -name 'gpstk_py_binds.tar.gz' -type f -exec rm -f {} +;\
     rm -rf src
 
 USER root
@@ -57,9 +57,8 @@ USER builder
 
 RUN cd /recipes/anubis;\
     ./makepkg.sh;\
-    find . -type f -exec rm -f {} +;\
+    find . -maxdepth 1 -type f -exec rm -f {} +;\
     rm -rf src
-
 
 USER root
 
@@ -75,7 +74,7 @@ USER builder
 
 RUN cd /recipes/geb-pp;\
     ./makepkg.sh;\
-    find . -type f -exec rm -f {} +;\
+    find . -maxdepth 1 -type f -exec rm -f {} +;\
     rm -rf src
 
 
@@ -103,6 +102,7 @@ RUN mkdir recipes/pdftk;\
     mkdir -p pkg/usr/bin;\
     install -m755 ./pdftk ./pkg/usr/bin;
 
+#CMD [ "/bin/bash" ]
 
 #FROM docker.io/ubuntu:bionic AS glab
 
@@ -147,7 +147,7 @@ RUN apt-get update -y; apt-get install -y libboost-system$BOOST_VER \
 # Prepare Virtual Environment
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
-RUN jupyter labextension install @jupyter-widgets/jupyterlab-manager@2.0;\
+RUN jupyter labextension install @jupyter-widgets/jupyterlab-manager;\
     jupyter labextension install jupyter-matplotlib;\
     jupyter labextension update --all;\
     jupyter lab build
