@@ -22,17 +22,20 @@ pos1_frequency = __Dropdown(
     description="pos1-frequency",
 )
 pos1_soltype = __Dropdown(
-    value="2:combined", options=["0:forward", "1:backward", "2:combined"],
+    value="2:combined",
+    options=["0:forward", "1:backward", "2:combined"],
     description="pos1-soltype",
 )
 pos1_elmask = 10  # (deg)
 pos1_snrmask = 0  # (dBHz)
-pos1_dynamics = __Dropdown(value="1:on", options=["0:off", "1:on"],
-        description='pos1-dynamics')
-pos1_tidecorr = __Dropdown(value="1:on", options=["0:off", "1:on"],
-        description='pos1-tidecorr')
+pos1_dynamics = __Dropdown(
+    value="1:on", options=["0:off", "1:on"], description="pos1-dynamics"
+)
+pos1_tidecorr = __Dropdown(
+    value="1:on", options=["0:off", "1:on"], description="pos1-tidecorr"
+)
 pos1_ionoopt = __Dropdown(
-        value="0:off",
+    value="0:off",
     options=[
         "0:off",
         "1:brdc",
@@ -46,11 +49,12 @@ pos1_ionoopt = __Dropdown(
         "9:vtec_ef",
         "10:gtec",
     ],
-    description='pos1-ionoopt',
+    description="pos1-ionoopt",
 )
 pos1_tropopt = __Dropdown(
-    value="1:saas", options=["0:off", "1:saas", "2:sbas", "3:est-ztd", "4:est-ztdgrad"],
-    description='pos1-tropopt',
+    value="1:saas",
+    options=["0:off", "1:saas", "2:sbas", "3:est-ztd", "4:est-ztdgrad"],
+    description="pos1-tropopt",
 )
 pos1_sateph = __Dropdown(
     value="0:brdc",
@@ -59,40 +63,41 @@ pos1_sateph = __Dropdown(
 )
 pos1_exclsats = ""  # (prn ...)
 pos1_navsys = __Dropdown(
-    value=["1:gps"],
-    options=["1:gps",
-             "2:sbas",
-             "3:gps+sbas",
-             "4:glo",
-             "5:gps+glo",
-             "6:sbas+glo",
-             "7:gps+sbas+glo",
-             "8:gal",
-             "9:gps+gal",
-             "10:sbas+gal",
-             "11:gps+sbas+gal",
-             "12:glo+gal",
-             "13:gps+glo+gal",
-             "14:sbas+glo+gal",
-             "15:gps+sbas+glo+gal",
-             "16:qzs",
-             "17:gps+qzs",
-             "18:sbas+qzs",
-             "19:gps+sbas+qzs",
-             "20:glo+qzs",
-             "21:gps+glo+qzs",
-             "22:sbas+glo+qzs",
-             "23:gps+sbas+glo+qzs",
-             "24:gal+qzs",
-             "25:gps+gal+qzs",
-             "26:sbas+gal+qzs",
-             "27:gps+sbas+gal+qzs",
-             "28:glo+gal+qzs",
-             "29:gps+glo+gal+qzs",
-             "30:sbas+glo+gal+qzs",
-             "31:gps+sbas+glo+gal+qzs",
-             "32:comp",
-             ],
+    value="1:gps",
+    options=[
+        "1:gps",
+        "2:sbas",
+        "3:gps+sbas",
+        "4:glo",
+        "5:gps+glo",
+        "6:sbas+glo",
+        "7:gps+sbas+glo",
+        "8:gal",
+        "9:gps+gal",
+        "10:sbas+gal",
+        "11:gps+sbas+gal",
+        "12:glo+gal",
+        "13:gps+glo+gal",
+        "14:sbas+glo+gal",
+        "15:gps+sbas+glo+gal",
+        "16:qzs",
+        "17:gps+qzs",
+        "18:sbas+qzs",
+        "19:gps+sbas+qzs",
+        "20:glo+qzs",
+        "21:gps+glo+qzs",
+        "22:sbas+glo+qzs",
+        "23:gps+sbas+glo+qzs",
+        "24:gal+qzs",
+        "25:gps+gal+qzs",
+        "26:sbas+gal+qzs",
+        "27:gps+sbas+gal+qzs",
+        "28:glo+gal+qzs",
+        "29:gps+glo+gal+qzs",
+        "30:sbas+glo+gal+qzs",
+        "31:gps+sbas+glo+gal+qzs",
+        "32:comp",
+    ],
     description="pos1-navsys",
 )
 pos2_armode = __Dropdown(
@@ -154,7 +159,9 @@ out_solstatic = __Dropdown(
 out_nmeaintv1 = 0  # (s)
 out_nmeaintv2 = 0  # (s)
 out_outstat = __Dropdown(
-    value="2:residual", options=["0:off", "1:state", "2:residual"], description="out-outstat"
+    value="2:residual",
+    options=["0:off", "1:state", "2:residual"],
+    description="out-outstat",
 )
 stats_errratio = 100
 stats_errphase = 0.003  # (m)
