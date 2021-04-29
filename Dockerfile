@@ -86,7 +86,7 @@ RUN apt-get update -y; apt-get install -y python3 python3-venv;\
     python3 -m venv venv ;\
     . /opt/venv/bin/activate ;\
     pip install --no-cache-dir --upgrade pip;\
-    pip install --no-cache-dir jupyterlab ipython pandas numpy matplotlib nptyping;\
+    pip install --no-cache-dir jupyterlab ipython pandas numpy matplotlib nptyping tabulate;\
     . /opt/venv/bin/activate ;\
     pip --no-cache-dir install ipywidgets jupyter_contrib_nbextensions ipympl;\
     jupyter contrib nbextension install;\
@@ -168,6 +168,7 @@ RUN SPATH=$(python3 -c 'import sysconfig; print(sysconfig.get_paths()["purelib"]
     echo $SPATH;\
     ln -s /glue/py.jupyter_utils "$SPATH/tosogoJupyter";\
     ln -s /glue/py.optionA "$SPATH/gluecode"
+    ln -s /glue/py.geoba "$SPATH/geoba"
 
 #### Install gosu
 ###COPY docker/install_scripts/* ./

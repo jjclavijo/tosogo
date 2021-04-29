@@ -1,11 +1,17 @@
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt  # type: ignore
 
 # from dataenforce import Dataset
 
-from math import cos
+from math import cos,floor
 from itertools import cycle
 from .handlers import DataFile
+
+from typing import Tuple,Optional
+from numbers import Number
+
+import subprocess as sp
 
 """
 Constants
@@ -83,7 +89,24 @@ def plot_tracks(sessions, filtro=lambda x: x.iloc[len(x) // 2 :]):
 
     plt.show()
 
-def GEOBA_final_pos(data: DataFile) -> pd.DataFrame:
+def deg2dms(deg:Number) -> Tuple[int,int,float]:
+    d: int
+    m: int
+    s: float
+
+    side: int = -1 if deg < 0 else 1
+    deg = abs(deg)
+    d = floor(deg)
+    _m = deg - d
+    _m *= 60
+    m = floor(_m)
+    _s = _m - m
+    _s *= 60
+    s = _s
+
+    return d*side, m, s
+
+def GEOBA_final_pos(data: DataFile, proj: Optional[str]='GEOBA') -> pd.DataFrame:
 
     posiciones = []
     for run in range(3):
@@ -100,14 +123,33 @@ def GEOBA_final_pos(data: DataFile) -> pd.DataFrame:
 
         posiciones.append({k:(posFw[k]+posBw[k])/2 for k in posFw.keys()})
 
-    sesiones = ["{longitud} {latitud} {altura}".format(**d) for d in posiciones]
 
-    sesiones_string = '\n'.join(['',*sesiones,'EOF',''])
+    if proj is None:
+        out = pd.DataFrame(posiciones,
+                index=['Sesion Completa','Sesion 1','Sesion 2'])
 
-    #TODO: Select projection
-    proyeccion = "+proj=tmerc +ellps=GRS80 +lat_0=-90 +lon_0=-60 +x_0=5500000 +no_defs"
+    elif proj is 'geograficas':
 
-    projout = pd.DataFrame(\
+        out = pd.DataFrame(posiciones,
+                index=['Sesion Completa','Sesion 1','Sesion 2'])
+
+        out.loc[:,['latitud','longitud']] = out.loc[:,['latitud','longitud']]\
+                                               .applymap(lambda x:
+                                                       '{}°{}\'{:.5f}\"'\
+                                                       .format(*deg2dms(x)))
+
+    else:
+        sesiones = ["{longitud} {latitud} {altura}".format(**d) for d in posiciones]
+        sesiones_string = '\n'.join(['',*sesiones,'EOF',''])
+
+        if proj == 'GEOBA':
+            #TODO: Select projection
+            proyeccion = "+proj=tmerc +ellps=GRS80 +lat_0=-90 +lon_0=-60 +x_0=5500000 +no_defs"
+        else:
+            proyeccion = proj
+
+        #TODO: Check projections
+        out = pd.DataFrame(\
                   np.array([i.split() for i in\
                             sp.check_output(['proj','-f','%.3f',*proyeccion.split()],
                                             input='\n'.join(sesiones).encode()
@@ -117,5 +159,5 @@ def GEOBA_final_pos(data: DataFile) -> pd.DataFrame:
                            columns=['Este','Norte','Altura']
                           )
 
-    return projout
+    return out
 
