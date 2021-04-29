@@ -96,8 +96,9 @@ def _(time: GpstkDate) -> GpstkDate:
         raise ValueError("Bad gpstk time string")
 
 
-def gpstkRinSum(path: FilePath) -> bGpstkRinexSumary:
-    logGpstk.info("Ejecutando RinSum para extraer información de {}".format(path))
+def gpstkRinSum(path: FilePath, quiet: bool=False) -> bGpstkRinexSumary:
+    if not quiet:
+        logGpstk.info("Ejecutando RinSum para extraer información de {}".format(path))
     rinsumP = sp.run(["RinSum", path], capture_output=True)
     if rinsumP.stderr:
         logGpstk.warning(rinsumP.stderr.decode())
@@ -157,7 +158,7 @@ def gpstkSplitFrom(infile: FilePath, outfile: FilePath, time: Datetime64) -> boo
 # isRinex :: path -> Bool
 def isRinex(path: FilePath) -> bool:
     logGpstk.info("Usando RinSum para chequear la validez de {}".format(path))
-    if gpstkRinSum(path).find(b"This header is VALID") == -1:
+    if gpstkRinSum(path,quiet=True).find(b"This header is VALID") == -1:
         return False
     else:
         return True
@@ -465,7 +466,7 @@ def getBrdcNav(file: FilePath, times: Dict[str, Datetime64] = None) -> List[File
     logDescargas.info("Buscando archivo de navegación para {}".format(file))
 
     if times is None:
-        times = parse_times(gpstkRinSum(file))
+        times = parse_times(gpstkRinSum(file,quiet=True))
 
     ini_y, ini_doy = timeconvertTo(times["start"], "%Y %j")
     end_y, end_doy = timeconvertTo(times["end"], "%Y %j")

@@ -102,6 +102,8 @@ RUN mkdir recipes/pdftk;\
     mkdir -p pkg/usr/bin;\
     install -m755 ./pdftk ./pkg/usr/bin;
 
+
+
 #CMD [ "/bin/bash" ]
 
 #FROM docker.io/ubuntu:bionic AS glab
@@ -147,6 +149,8 @@ RUN apt-get update -y; apt-get install -y libboost-system$BOOST_VER \
 # Prepare Virtual Environment
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
+
+RUN apt-get update -y; apt-get install -y python3 python3-distutils;
 RUN jupyter labextension install @jupyter-widgets/jupyterlab-manager;\
     jupyter labextension install jupyter-matplotlib;\
     jupyter labextension update --all;\

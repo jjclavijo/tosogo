@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt  # type: ignore
 
 from math import cos
 from itertools import cycle
+from .handlers import DataFile
 
 """
 Constants
