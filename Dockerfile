@@ -167,7 +167,7 @@ COPY /glue /glue
 RUN SPATH=$(python3 -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])') ;\
     echo $SPATH;\
     ln -s /glue/py.jupyter_utils "$SPATH/tosogoJupyter";\
-    ln -s /glue/py.optionA "$SPATH/gluecode"
+    ln -s /glue/py.optionA "$SPATH/gluecode";\
     ln -s /glue/py.geoba "$SPATH/geoba"
 
 #### Install gosu
