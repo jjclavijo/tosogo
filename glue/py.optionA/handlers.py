@@ -422,6 +422,24 @@ def _(path: List[FilePath], depth: int) -> FilePath:
     else:
         return checkPath([*path, dirpath], depth=depth - 1)
 
+def rtklibPrintSolRep(solucion: FilePath) -> str:
+    with open(solucion,'r') as f:
+        head = []
+        while (linea := f.readline())[0] == '%':
+            head.append(linea)
+
+        eps = {'0':0,'1':0,'2':0,'5':0}
+        status = linea.split()[5]
+        eps[status] += 1
+
+        while (linea := f.readline()):
+            status = linea.split()[5]
+            eps[status] += 1
+
+    suma = sum(eps.values())
+    head.append("Epocas procesadas: {}, Fijas: {}"\
+                 .format(suma,eps['1']) )
+    return head
 
 def rtklibDifSol(
     punto: FilePath,
@@ -588,7 +606,7 @@ class DataFile(object):
         base = base.path
         eph = ["{}".format(i) for i in set(sp3)]
         sessname = "{}-{}-{}".format(
-            os.path.basename(base)[:4], os.path.basename(path)[:4], session
+            os.path.basename(base)[-12:-8], os.path.basename(path)[-12:-8], session
         )
         output = os.path.join(folder, sessname)
 

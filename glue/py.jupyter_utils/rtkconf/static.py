@@ -182,25 +182,25 @@ ant1_postype = __Dropdown(
     options=["0:llh", "1:xyz", "2:single", "3:posfile", "4:rinexhead", "5:rtcm"],
     description="ant1-postype",
 )
-ant1_pos1 = 0  # (deg|m)
-ant1_pos2 = 0  # (deg|m)
-ant1_pos3 = 0  # (m|m)
+ant1_pos1 = 0.  # (deg|m)
+ant1_pos2 = 0.  # (deg|m)
+ant1_pos3 = 0.  # (m|m)
 ant1_anttype = "*"
-ant1_antdele = 0  # (m)
-ant1_antdeln = 0  # (m)
-ant1_antdelu = 0  # (m)
+ant1_antdele = 0.  # (m)
+ant1_antdeln = 0.  # (m)
+ant1_antdelu = 0.  # (m)
 ant2_postype = __Dropdown(
     value="3:posfile",
     options=["0:llh", "1:xyz", "2:single", "3:posfile", "4:rinexhead", "5:rtcm"],
     description="ant2-postype",
 )
-ant2_pos1 = 0  # (deg|m)
-ant2_pos2 = 0  # (deg|m)
-ant2_pos3 = 0  # (m|m)
+ant2_pos1 = 0.  # (deg|m)
+ant2_pos2 = 0.  # (deg|m)
+ant2_pos3 = 0.  # (m|m)
 ant2_anttype = "*"
-ant2_antdele = 0  # (m)
-ant2_antdeln = 0  # (m)
-ant2_antdelu = 0  # (m)
+ant2_antdele = 0.  # (m)
+ant2_antdeln = 0.  # (m)
+ant2_antdelu = 0.  # (m)
 misc_timeinterp = __Dropdown(
     value="1:on", options=["0:off", "1:on"], description="misc-timeinterp"
 )

@@ -43,7 +43,7 @@ def plot_height(sess, ax=None, filtro=lambda x: x.iloc[len(x) // 2 :], **kwargs)
     if ax is None:
         fig, ax = plt.subplots()
 
-    filtro(sess.height).plot(ax=ax, **kwargs)
+    filtro(sess).height.plot(ax=ax, **kwargs)
     return ax
 
 
@@ -72,8 +72,24 @@ def plot_last(sess, ax=None, filtro=lambda x: x.iloc[len(x) // 2 :], **kwargs):
         fig, ax = plt.subplots()
 
     ax.plot(
-        sess.longitude[-1] * DEG2RAD * cosreflat * 6.4e6,
-        sess.latitude[-1] * DEG2RAD * 6.4e6,
+        filtro(sess).longitude[-1] * DEG2RAD * cosreflat * 6.4e6,
+        filtro(sess).latitude[-1] * DEG2RAD * 6.4e6,
+        **kwargs,
+    )
+
+    ax.set_aspect("equal")
+    return ax
+
+def plot_median(sess, ax=None, filtro=lambda x: x.iloc[len(x) // 2 :], **kwargs):
+    reflat = sess.latitude.median()
+    cosreflat = cos(reflat * DEG2RAD)
+
+    if ax is None:
+        fig, ax = plt.subplots()
+
+    ax.plot(
+        filtro(sess).longitude.median() * DEG2RAD * cosreflat * 6.4e6,
+        filtro(sess).latitude.median() * DEG2RAD * 6.4e6,
         **kwargs,
     )
 
@@ -81,13 +97,15 @@ def plot_last(sess, ax=None, filtro=lambda x: x.iloc[len(x) // 2 :], **kwargs):
     return ax
 
 
-def plot_tracks(sessions, filtro=lambda x: x.iloc[len(x) // 2 :]):
-    fig, ax = plt.subplots()
+def plot_tracks(sessions, ax=None, filtro=lambda x: x.iloc[len(x) // 2 :]):
+    if ax is None:
+        fig, ax = plt.subplots()
+
     for sess, mk1, mk2 in zip(sessions, cycle(["x", ".", "^"]), cycle([">", "o", "^"])):
         plot_track(sess, ax=ax, filtro=filtro, marker=mk1, alpha=0.05)
-        plot_last(sess, ax=ax, marker=mk2, markersize=15)
+        plot_last(sess, ax=ax, filtro=filtro, marker=mk2, markersize=15)
 
-    plt.show()
+    return ax #plt.show()
 
 def deg2dms(deg:Number) -> Tuple[int,int,float]:
     d: int
