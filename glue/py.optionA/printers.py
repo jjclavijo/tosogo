@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt  # type: ignore
+import seaborn as sns
 
 # from dataenforce import Dataset
 
@@ -124,22 +125,28 @@ def deg2dms(deg:Number) -> Tuple[int,int,float]:
 
     return d*side, m, s
 
-def GEOBA_final_pos(data: DataFile, proj: Optional[str]='GEOBA') -> pd.DataFrame:
+def GEOBA_final_pos(data: DataFile, proj: Optional[str]='GEOBA',filtro= lambda x: x) -> pd.DataFrame:
 
     posiciones = []
     for run in range(3):
         posFw = data.sessData['{}-fw'.format(run)]
-        posFw = {'latitud':posFw.latitude[-1],
-                 'longitud':posFw.longitude[-1],
-                 'altura':posFw.height[-1]
-                }
-        posBw = data.sessData['{}-bw'.format(run)]
-        posBw = {'latitud':posBw.latitude[-1],
-                 'longitud':posBw.longitude[-1],
-                 'altura':posBw.height[-1]
+
+        posFw = filtro(posFw)
+
+        posFw = {'latitud':posFw.latitude.values,
+                 'longitud':posFw.longitude.values,
+                 'altura':posFw.height.values
                 }
 
-        posiciones.append({k:(posFw[k]+posBw[k])/2 for k in posFw.keys()})
+        posBw = data.sessData['{}-bw'.format(run)]
+        posBw = filtro(posBw)
+
+        posBw = {'latitud':posBw.latitude.values,
+                 'longitud':posBw.longitude.values,
+                 'altura':posBw.height.values
+                }
+
+        posiciones.append({k:np.median(np.concatenate([posFw[k],posFw[k]])) for k in posFw.keys()})
 
 
     if proj is None:
@@ -179,3 +186,76 @@ def GEOBA_final_pos(data: DataFile, proj: Optional[str]='GEOBA') -> pd.DataFrame
 
     return out
 
+
+def filtroQ(x):
+    mask = x.Q == 1
+    return x.loc[mask.values]
+
+def filtroGauss(x):
+
+    df = x.copy()
+
+    #df.longitude *= 6400000  * DEG2RAD * np.cos(df.iloc[0].latitude * DEG2RAD )
+    #df.latitude *= 6400000 * DEG2RAD
+
+    mask = (( df.latitude < (-df.latitude.std()*3+df.latitude.median()) )    |\
+            ( df.latitude > (df.latitude.std()*3+df.latitude.median()) )     |\
+            ( df.longitude < (-df.longitude.std()*3+df.longitude.median()) ) |\
+            ( df.longitude > (df.longitude.std()*3+df.longitude.median()) )  |\
+            ( df.height < (-df.height.std()*3+df.height.median()) )          |\
+            ( df.height > (df.height.std()*3+df.height.median()) )            \
+            )
+
+    #mask.sum()
+    #logger.log(f'filtering {mask.sum()} epochs')
+    df = df[~mask]
+    return df
+
+def plotSessionGraphs(data,filtro=lambda x: x): #sessdata -> None
+
+    def f(k,x):
+        df = filtro(x)
+        df.loc[:,'sesn'] = k
+        return df
+
+    df = pd.concat(map(lambda x:f(*x), data.items()))
+
+    reflat = df.latitude.median()
+
+    df.longitude *= 6400000  * DEG2RAD * np.cos(reflat * DEG2RAD )
+    df.latitude *= 6400000 * DEG2RAD
+
+    df.loc[:,'sesion'] = df.loc[:,'sesn'].apply(lambda x: x.split('-')[0])
+    df.loc[:,'corrida'] = df.loc[:,'sesn'].apply(lambda x: x.split('-')[1])
+
+    normlat = np.median(df.loc[df.sesion == '0','latitude'].values)
+    normlon = np.median(df.loc[df.sesion == '0','longitude'].values)
+
+    df.latitude -= normlat
+    df.longitude -= normlon
+
+    ax = sns.kdeplot(data=df,x='latitude',y='longitude',hue='sesion',
+                     gridsize=60,bw_adjust=4,palette='tab10', levels=[0.33])
+
+    ax = sns.kdeplot(data=df,x='latitude',y='longitude',hue='sesion',
+                     gridsize=60,bw_adjust=4,palette='tab10',
+                     ax=ax, levels=[0.05],linestyles='dashed')
+
+    ax.set_aspect('equal')
+
+    handles = ax.get_children()[:6]
+    labels = ['2σ: Completo','2σ:Sesion 1','2σ: Sesion 2',
+              '95%: Completo','95%:Sesion 1','95%: Sesion 2']
+
+    ax.legend(handles=handles,labels=labels,ncol=3,loc=3)
+
+    plt.show()
+
+    ax = sns.violinplot(data=df, y='height',x='sesion',hue='corrida'
+                        ,palette='tab10', split=True, scale='area'
+                        , common_norm=False, common_grid=True
+                    )
+
+    ax.legend(loc=4)
+
+    plt.show()

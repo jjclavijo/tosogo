@@ -108,8 +108,19 @@ En coordenadas proyectadas, Gauss Krugger faja 5:
 
 {tablaGK}
 
-A continuación se muestra un grafico de las trayectorias recorridas
-por el filtro kallman en cada procesamiento (pasada directa y inversa en cada sesión).
+A continuación se grafica un resumen de los resultados de procesamiento.
 
+La posición horizontal se grafica, centrada en la posición final de la sesión
+completa, con dos curvas. Una curva llena que indica
+un desvío de 2$\sigma$ --es decir que el 66% de las épocas resueltas fijas
+quedan dentro de ese perimetro-- y una punteada que indica un intervalo del
+95%.
+
+La altura se grafica con un histogramas correspondientes a cada sesión, donde
+también se grafica con un gráfico de caja y bigote la media y los cuartiles
+(que encierran el %50 de las soluciones).
+
+La posición final se puede
 [Ver en Google Maps](https://maps.google.com/maps?t=k&q=loc:{ptlat}+{ptlon})
+para mayor comodidad
 """

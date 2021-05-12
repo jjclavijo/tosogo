@@ -86,7 +86,7 @@ RUN apt-get update -y; apt-get install -y python3 python3-venv;\
     python3 -m venv venv ;\
     . /opt/venv/bin/activate ;\
     pip install --no-cache-dir --upgrade pip;\
-    pip install --no-cache-dir jupyterlab ipython pandas numpy matplotlib nptyping tabulate;\
+    pip install --no-cache-dir jupyterlab ipython pandas numpy matplotlib nptyping tabulate seaborn;\
     . /opt/venv/bin/activate ;\
     pip --no-cache-dir install ipywidgets jupyter_contrib_nbextensions ipympl;\
     jupyter contrib nbextension install;\

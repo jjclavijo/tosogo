@@ -613,41 +613,26 @@ class DataFile(object):
         # Create directory if needed
         output = checkPath(output, depth=1)
 
-        fwsess = rtklibDifSol(
-            punto,
-            base,
-            conf,
-            "{}-fw.txt".format(output),
-            extra_args=[],
-            nav=[nav],
-            eph=eph,
-        )
+        for kdir,extra in zip(['fw','bw'],[[],["-b"]]):
 
-        if not fwsess == 0:
-            raise ValueError("rtklib returned not 0 error code")
+            sess = rtklibDifSol(
+                punto,
+                base,
+                conf,
+                f'{output}-{kdir}.txt',
+                extra_args=extra,
+                nav=[nav],
+                eph=eph,
+            )
 
-        self.sess["{}-fw".format(session)] = "{}-fw.txt".format(output)
+            if not sess == 0:
+                raise ValueError("rtklib returned not 0 error code")
 
-        #!echo rnx2rtkp -k {conf} {punto} {base} {nav} {eph} -o {output}-fw.txt
-        #!rnx2rtkp -k {conf} {punto} {base} {nav} {eph} -o {output}-fw.txt
 
-        bwsess = rtklibDifSol(
-            punto,
-            base,
-            conf,
-            "{}-bw.txt".format(output),
-            extra_args=["-b"],
-            nav=[nav],
-            eph=eph,
-        )
+            print(f'Sesión: {output}-{kdir}')
+            print(*rtklibPrintSolRep(f'{output}-{kdir}.txt')[:-3],sep='',end='\n\n')
 
-        if not bwsess == 0:
-            raise ValueError("rtklib returned not 0 error code")
-
-        self.sess["{}-bw".format(session)] = "{}-bw.txt".format(output)
-
-        #!echo rnx2rtkp -b -k {conf} {punto} {base} {nav} {eph} -o {output}-bw.txt
-        #!rnx2rtkp -b -k {conf} {punto} {base} {nav} {eph} -o {output}-bw.txt
+            self.sess[f'{session}-{kdir}'] = f'{output}-{kdir}.txt'
 
         return True
 
