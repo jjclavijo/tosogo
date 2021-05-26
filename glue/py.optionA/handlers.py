@@ -575,7 +575,7 @@ class DataFile(object):
     def _pdop_filter(self, max_pdop=2.5):
 
         outdir = os.path.dirname(self.path)
-        outfile = "filt_{}".format(os.path.basename(self.path))
+        outfile = "filt/{}".format(os.path.basename(self.path))
 
         outpath = os.path.join(outdir, outfile)
 

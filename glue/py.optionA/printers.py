@@ -7,7 +7,7 @@ import seaborn as sns
 
 from math import cos,floor
 from itertools import cycle
-from .handlers import DataFile
+from .handlers import DataFile,parse_marker
 
 from typing import Tuple,Optional
 from numbers import Number
@@ -186,6 +186,16 @@ def GEOBA_final_pos(data: DataFile, proj: Optional[str]='GEOBA',filtro= lambda x
 
     return out
 
+def finalPOS(handler,data='/rtklib/data/ramsac.pos'):
+    marker = parse_marker(handler._sumary)
+    try:
+        out = sp.check_output(['grep',marker,data])
+        out = pd.Series(out.split()[:3],
+                index=['latitud','longitud','altura']).astype('float')
+    except sp.CalledProcessError:
+        return GEOBA_final_pos(handler,proj=None).iloc[0]
+
+    return out
 
 def filtroQ(x):
     mask = x.Q == 1

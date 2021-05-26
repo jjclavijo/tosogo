@@ -112,13 +112,12 @@ def apply_template(**kwargs):
     data = (\
         kwargs.get('pdf_file','/vinculacion/data/Anexo4.1.pdf'),
         kwargs.get('fdf_file','4.1.tmp.pdf'),
-        kwargs.get('base','____'),
-        kwargs.get('punto','____')
+        kwargs.get('out',f"Anexo4.1-{kwargs.get('base','____')}-{kwargs.get('punto','____')}.pdf")
            )
 
     ipy.run_cell(\
     """%%script bash
     pdftk {} \
-          fill_form {} output Anexo4.1-{}-{}.pdf
+          fill_form {} output {}
     """.format(*data)\
             )
